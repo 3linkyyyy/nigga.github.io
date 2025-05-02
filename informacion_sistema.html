@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>System Information</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #e9eef2;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    .container {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+      padding: 30px 40px;
+      max-width: 600px;
+      width: 90%;
+    }
+
+    h1 {
+      text-align: center;
+      color: #333;
+      margin-bottom: 25px;
+    }
+
+    p {
+      background: #f9f9f9;
+      padding: 10px 15px;
+      border-radius: 8px;
+      margin-bottom: 10px;
+      color: #444;
+    }
+
+    .info {
+      font-weight: bold;
+      color: #222;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Detailed Information About Your Device</h1>
+
+    <p><span class="info">Public IP:</span> <span id="ip">Loading...</span></p>
+    <p><span class="info">Internet Provider (ISP):</span> <span id="isp">Loading...</span></p>
+    <p><span class="info">Location:</span> <span id="geo">Loading...</span></p>
+    <p><span class="info">Local Time:</span> <span id="timezone">Loading...</span></p>
+    <p><span class="info">Browser:</span> <span id="browser"></span></p>
+    <p><span class="info">Platform:</span> <span id="platform"></span></p>
+    <p><span class="info">Operating System:</span> <span id="os"></span></p>
+    <p><span class="info">Available RAM:</span> <span id="ram"></span></p>
+    <p><span class="info">CPU Cores:</span> <span id="cpu"></span></p>
+    <p><span class="info">GPU (WebGL):</span> <span id="gpu"></span></p>
+    <p><span class="info">Internet Connection:</span> <span id="connection"></span></p>
+    <p><span class="info">Preferred Browser Language:</span> <span id="language"></span></p>
+  </div>
+
+  <script>
+    fetch("https://ipinfo.io/json?token=0f12f3ff52d30f")
+      .then(res => res.json())
+      .then(data => {
+        if (data.error) {
+          console.error('Error fetching IP data:', data.error);
+          document.getElementById('ip').textContent = 'Failed to retrieve IP';
+          document.getElementById('isp').textContent = 'Failed to retrieve ISP';
+          document.getElementById('geo').textContent = 'Failed to retrieve location';
+          document.getElementById('timezone').textContent = 'Failed to retrieve time';
+        } else {
+          document.getElementById('ip').textContent = data.ip || 'Unknown';
+          document.getElementById('isp').textContent = data.org || 'Unavailable';
+          document.getElementById('geo').textContent = `${data.city}, ${data.region}, ${data.country}` || 'Unavailable';
+
+          const now = new Date();
+          const localTime = now.toLocaleString('en-US');
+          document.getElementById('timezone').textContent = `${localTime} (${data.timezone || 'Unknown time zone'})`;
+        }
+      })
+      .catch(error => {
+        console.error('Request failed:', error);
+        document.getElementById('ip').textContent = 'Error';
+        document.getElementById('isp').textContent = 'Error';
+        document.getElementById('geo').textContent = 'Error';
+        document.getElementById('timezone').textContent = 'Error';
+      });
+
+    document.getElementById('browser').textContent = navigator.userAgent;
+    document.getElementById('platform').textContent = navigator.platform;
+    document.getElementById('language').textContent = navigator.language;
+
+    const os = navigator.platform;
+    const osVersion = navigator.appVersion;
+    document.getElementById('os').textContent = `${os} - ${osVersion}`;
+
+    const ram = navigator.deviceMemory || 'Unknown';
+    document.getElementById('ram').textContent = `${ram} GB`;
+
+    const cpu = navigator.hardwareConcurrency || 'Unknown';
+    document.getElementById('cpu').textContent = cpu;
+
+    function getGPU() {
+      try {
+        const canvas = document.createElement('canvas');
+        const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+        const ext = gl.getExtension('WEBGL_debug_renderer_info');
+        if (!ext) return 'Unavailable';
+        return gl.getParameter(ext.UNMASKED_RENDERER_WEBGL);
+      } catch (e) {
+        return 'Unavailable';
+      }
+    }
+
+    document.getElementById('gpu').textContent = getGPU();
+
+    const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+    if (connection) {
+      const type = connection.effectiveType || 'Unknown';
+      const downlink = connection.downlink || 'Unknown';
+      const rtt = connection.rtt || 'Unknown';
+      document.getElementById('connection').textContent = `Type: ${type}, Speed: ${downlink} Mbps, RTT: ${rtt} ms`;
+    } else {
+      document.getElementById('connection').textContent = 'Not available';
+    }
+  </script>
+</body>
+</html>
